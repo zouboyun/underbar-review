@@ -216,13 +216,30 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
-    _.reduce(collection, iterator, false);
+    // return _.reduce(collection, function(){
+    //   return iterator.apply(this, arguments);
+    // });
+    var result = true;
+    for (var i = 0; i < collection.length; i++) {
+      if (iterator !== undefined) {
+        iterator(collection[i]) ? null : result = false; 
+      } else {
+        collection[i] ? null : result = false;
+      }
+    }
+    return result;
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    return !_.every(collection, function(){
+      if (iterator === undefined) {
+        iterator = _.identity
+      } 
+      return !iterator.apply(this, arguments)
+    })
   };
 
 
@@ -245,11 +262,27 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    var objArray = Array.prototype.slice.apply(arguments, [1]);
+    for (var i = 0; i < objArray.length; i++) {
+      for (var key in objArray[i]) {
+        obj[key] = objArray[i][key];
+      }
+    }
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var objArray = Array.prototype.slice.apply(arguments, [1]);
+    for (var i = 0; i < objArray.length; i++) {
+      for (var key in objArray[i]) {
+        if (obj[key] === undefined) {
+          obj[key] = objArray[i][key];
+        }
+      }
+    }
+    return obj;
   };
 
 
@@ -293,7 +326,20 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var resultObj = {};
+    return function() {
+      if (!Object.keys(resultObj).includes(JSON.stringify(arguments))) {
+        resultObj[JSON.stringify(arguments)] = func.apply(this, arguments);
+        return resultObj[JSON.stringify(arguments)];
+      } else {
+          return resultObj[JSON.stringify(arguments)];
+      }
+    }     
   };
+    
+    
+
+  
 
   // Delays a function for the given number of milliseconds, and then calls
   // it with the arguments supplied.
@@ -302,8 +348,17 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args;
+    if (wait === undefined) {
+      args = Array.prototype.slice.apply(arguments, [1]);
+      return func.apply(null, args);
+    } else {
+      args = Array.prototype.slice.apply(arguments, [2]);
+      return setTimeout(function() {
+        return func.apply(null, args);
+      }, wait);
+    }
   };
-
 
   /**
    * ADVANCED COLLECTION OPERATIONS
