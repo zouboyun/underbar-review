@@ -89,8 +89,8 @@
   _.reject = function(collection, test) {
     // TIP: see if you can re-use _.filter() here, without simply
     // copying code in and modifying it
-    return _.filter(collection, function() {
-        return !test.apply(this, arguments);
+    return _.filter(collection, function(item) {
+        return !test(item);
     })
   };
 
@@ -219,15 +219,24 @@
     // return _.reduce(collection, function(){
     //   return iterator.apply(this, arguments);
     // });
-    var result = true;
-    for (var i = 0; i < collection.length; i++) {
-      if (iterator !== undefined) {
-        iterator(collection[i]) ? null : result = false; 
-      } else {
-        collection[i] ? null : result = false;
-      }
+    // var result = true;
+    // for (var i = 0; i < collection.length; i++) {
+    //   if (iterator !== undefined) {
+    //     iterator(collection[i]) ? null : result = false; 
+    //   } else {
+    //     collection[i] ? null : result = false;
+    //   }
+    // }
+    // return result;
+    if (iterator === undefined) {
+      iterator = _.identity;
     }
-    return result;
+    return _.reduce(collection, function(result, item) {
+      if (!iterator(item)) {
+        result = false;
+      }
+      return result;
+    }, true)
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
